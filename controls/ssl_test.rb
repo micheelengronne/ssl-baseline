@@ -46,6 +46,12 @@ force_ssl = attribute(
   description: 'The profile should not check if SSL is enabled on every port and assume it is'
 )
 
+openssl_compatibility = attribute(
+  'openssl_compatibility',
+  value: false,
+  description: 'Openssl and IANA have a different cipher syntax > TLS1.3'
+)
+
 # Find all TCP ports on the system, IPv4 and IPv6
 # Eliminate duplicate ports for cleaner reporting and faster scans and sort the
 # array by port number.
@@ -174,7 +180,14 @@ control 'kx-ecdh' do
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    describe ssl(sslport).ciphers(/^TLS_ECDH/i) do
+    
+    if openssl_compatibility
+      cipher_to_test = '/^ECDHE-/i'
+    else
+      cipher_to_test = '/^TLS_ECDHE/i'
+    end
+    
+    describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should be_enabled }
       it { should be_enabled }
     end
@@ -189,7 +202,14 @@ control 'kx-rsa' do
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    describe ssl(sslport).ciphers(/^TLS_RSA/i) do
+    
+    if openssl_compatibility
+      cipher_to_test = '/^RSA-/i'
+    else
+      cipher_to_test = '/^TLS_RSA/i'
+    end  
+  
+    describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should_not be_enabled }
       it { should_not be_enabled }
     end
