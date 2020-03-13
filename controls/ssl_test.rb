@@ -177,16 +177,15 @@ control 'kx-ecdh' do
   impact 0.5
   only_if { sslports.length > 0 }
 
+  if openssl_compatibility
+    cipher_to_test = '/^ECDHE-/i'
+  else
+    cipher_to_test = '/^TLS_ECDHE/i'
+  end
+
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    
-    if openssl_compatibility
-      cipher_to_test = '/^ECDHE-/i'
-    else
-      cipher_to_test = '/^TLS_ECDHE/i'
-    end
-    
     describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should be_enabled }
       it { should be_enabled }
@@ -199,16 +198,15 @@ control 'kx-rsa' do
   impact 0.5
   only_if { sslports.length > 0 }
 
+  if openssl_compatibility
+    cipher_to_test = '/^RSA-/i'
+  else
+    cipher_to_test = '/^TLS_RSA/i'
+  end
+
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    
-    if openssl_compatibility
-      cipher_to_test = '/^RSA-/i'
-    else
-      cipher_to_test = '/^TLS_RSA/i'
-    end  
-  
     describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should_not be_enabled }
       it { should_not be_enabled }
@@ -221,10 +219,16 @@ control 'kx-dh' do
   impact 0.5
   only_if { sslports.length > 0 }
 
+  if openssl_compatibility
+    cipher_to_test = '/^DH-/i'
+  else
+    cipher_to_test = '/^TLS_DH/i'
+  end
+
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    describe ssl(sslport).ciphers(/^TLS_DH/i) do
+    describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should_not be_enabled }
       it { should_not be_enabled }
     end
@@ -236,10 +240,16 @@ control 'kx-krb5' do
   impact 0.5
   only_if { sslports.length > 0 }
 
+  if openssl_compatibility
+    cipher_to_test = '/^KRB5-/i'
+  else
+    cipher_to_test = '/^TLS_KRB5/i'
+  end
+
   sslports.each do |sslport|
     # create a description
     proc_desc = "on node == #{target_hostname} running #{sslport[:socket].process.inspect} (#{sslport[:socket].pid})"
-    describe ssl(sslport).ciphers(/^TLS_KRB5/i) do
+    describe ssl(sslport).ciphers(cipher_to_test) do
       it(proc_desc) { should_not be_enabled }
       it { should_not be_enabled }
     end
